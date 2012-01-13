@@ -16,11 +16,21 @@ function getSessionIdByName (name) {
   var id = null
   
   _.each(sessions, function(s, i) {
-    if (e.name == name )
-     id = i
+    if (e.name == name)
+        id = i, break;
   })
   
   return id
+}
+
+function cutUrl(str) {
+    var urlData = url.parse(str)
+    return {
+        host : urlData.hostname,
+        port : urlData.port || (urlData.protocol == 'https:' ? 443 : 80),
+        path : urlData.pathname + (urlData.search || '') + (urlData.hash || ''),
+        
+    };
 }
 
 function  getLastSession() {
@@ -42,24 +52,48 @@ function uniq () {
 }
 
 function runQuery (query, session) {
-  // body...
+    var q = cutUrl(query.url);
+    q.headers = query.headers;
+    q.method = query.method;
+
+    if (session) {
+        // FIXME: Cookies, specific headers, w/e...
+    }
+
+    var req = http.request(q, function(res) {
+        query.response = res;
+        query.resData = '';
+        res.on('data', function(d) {
+            query.resData += d;
+        });
+    });
+
+    req.on('error', function(e) {
+        console.error('Could not complete query: ' + e.message);
+    });
+
+    if (query.data) {
+        req.write(query.data);
+    }
+    req.end();
 }
 
-function stackQuery (argument) {
-  // body...
+function stackQuery (argument, sId) {
+  var sess = sessions[sId];
+  sess.queries ? sess.queries.push(argument) : sess.queries = [argument];
 }
 
 exports.session = function(opt) {
-  var n = {name: uniq(), stacked: true, jsdom: false, html5: false, queries: [], coockies: []}
+  var n = {name: uniq(), stacked: true, jsdom: false, html5: false, queries: [], cookies: []}
   
   if (opt) {
-    n.name = opt.name | uniq()
-    n.stacked = opt.stacked != undefined | true
-    n.jsdom = opt.jsdom != undefined | true
-    n.html5 = opt.html5 != undefined | true
+    n.name = opt.name || uniq()
+    n.stacked = opt.stacked || true
+    n.jsdom = opt.jsdom || true
+    n.html5 = opt.html5 || true
   } 
-  
-  session.push(n)
+
+  sessions.push(n)
 }
 exports.get = function(opt) {
   if (!opt)
@@ -85,20 +119,17 @@ exports.post = function(opt) {
   exports.query(opt)
 }
 
-exports.query = function(opt) {
-  
-  if (session.length == 0 || ( opt && (opt.stacked == false)) )
-    return runQuery(opt, opt)
+exports.query = function(opt, sessionName) {
+  if (sessions.length == 0 || ( opt && (opt.stacked == false)) )
+    return runQuery(opt /*, opt */)
 
-  return stackQuery(opt)
+  return stackQuery(opt, sessionName ?
+      getSessionIdByName(sessionName) : getLastSessionId());
 }
 
 exports.run = function(name) {
-  if (name)
-    var sId = getSessionIdByName(name)
-  else
-    var sId = getLastSessionId()
-    
-  _.each()
+    var sId = name ? getSessionIdByName(name) : getLastSessionId();
+    _.each(sessions[sId].queries, function(q) {
+        runQuery(q, sessions[sId]);
+    });
 }
-
