@@ -9,18 +9,13 @@ var html5 = require('html5')
 var sessions = []
 
 function getSessionByName (name) {
-  return _.(sessions, function(e) { return e.name == name })
+    return _.find(sessions, function(e) {
+        return (e.name == name)
+    });
 }
 
 function getSessionIdByName (name) {
-  var id = null
-  
-  _.each(sessions, function(s, i) {
-    if (e.name == name)
-        id = i, break;
-  })
-  
-  return id
+  return sessions.indexOf(getSessionByName(name));
 }
 
 function cutUrl(str) {
