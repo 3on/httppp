@@ -22,6 +22,7 @@ function cutUrl(str) {
     var urlData = url.parse(str)
     return {
         host : urlData.hostname,
+        ssl  : urlData.protocol == 'https:',
         port : urlData.port || (urlData.protocol == 'https:' ? 443 : 80),
         path : urlData.pathname + (urlData.search || '') + (urlData.hash || ''),
         
@@ -54,19 +55,22 @@ function runQuery (query, session) {
     if (session) {
         // FIXME: Cookies, specific headers, w/e...
     }
-
-    var req = http.request(q, function(res) {
+    
+    var req = (query.ssl) ? http.request(q) : http.request(q)
+    
+    req.on('responce', function(res) {
         query.response = res;
         query.resData = '';
         res.on('data', function(d) {
+          // FIXME: need to be buffered for non string data like .torrent Doh !
             query.resData += d;
         });
-    });
-
+    })
+    
     req.on('error', function(e) {
         console.error('Could not complete query: ' + e.message);
     });
-
+    
     if (query.data) {
         req.write(query.data);
     }

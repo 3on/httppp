@@ -1,0 +1,20 @@
+{
+  "author": "3on <jr@ailleurs.me>",
+  "name": "httppp",
+  "description": "http wrapper",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/3on/httppp.git"
+  },
+  "main": "httppp.js",
+  "engines": {
+    "node": "~v0.4.11"
+  },
+  "dependencies": {
+    "underscore" : "",
+    "jsdom" : "",
+    "html5" : ""
+  },
+  "devDependencies": {}
+}
