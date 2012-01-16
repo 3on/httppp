@@ -58,13 +58,30 @@ function runQuery (query, session) {
     
     var req = (query.ssl) ? http.request(q) : http.request(q)
     
-    req.on('responce', function(res) {
+    req.on('response', function(res) {
         query.response = res;
         query.resData = '';
         res.on('data', function(d) {
-          // FIXME: need to be buffered for non string data like .torrent Doh !
+          // FIXME:  Data needs to be buffered for non string data like .torrent Doh !
             query.resData += d;
         });
+        
+        res.on('end', function() {
+          // FIXME: End of buffering
+          
+          // FIXME: process header -> process cookies
+          
+          // FIXME: call callback or jsDom
+          if (session && session.jsdom) {
+            // FIXME: jsDOM init
+            if (session.html5) {
+              // with html5 parsor
+            }
+          }
+          else {
+            query.cb(query.resData)
+          }
+        })
     })
     
     req.on('error', function(e) {
@@ -88,8 +105,8 @@ exports.session = function(opt) {
   if (opt) {
     n.name = opt.name || uniq()
     n.stacked = opt.stacked || true
-    n.jsdom = opt.jsdom || true
-    n.html5 = opt.html5 || true
+    n.jsdom = opt.jsdom || false
+    n.html5 = opt.html5 || false
   } 
 
   sessions.push(n)
