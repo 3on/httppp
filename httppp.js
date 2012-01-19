@@ -1,6 +1,7 @@
 var http = require('http')
 var https = require('https')
 var url = require('url')
+var querystring = require('querystring')
 var _ = require('underscore')
 var jsdom = require('jsdom')
 var html5 = require('html5')
@@ -49,15 +50,21 @@ function uniq () {
 
 function runQuery (query, session) {
     var q = cutUrl(query.url);
-    q.headers = query.headers;
+    q.headers = query.headers || [];
     q.method = query.method;
 
     if (session) {
-        // FIXME: Cookies, specific headers, w/e...
+      // FIXME: Cookies, specific headers, w/e...
     }
     
-    var req = (query.ssl) ? http.request(q) : http.request(q)
+    if (query.method == 'POST') {
+      query.body = querystring.stringify(query.data)
+      q.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+      q.headers['Content-Length'] = query.body.length
+    }
     
+    var req = (q.ssl) ? http.request(q) : https.request(q)
+
     req.on('response', function(res) {
         query.response = res;
         query.resData = '';
@@ -88,8 +95,8 @@ function runQuery (query, session) {
         console.error('Could not complete query: ' + e.message);
     });
     
-    if (query.data) {
-        req.write(query.data);
+    if (query.body) {
+        req.write(query.body);
     }
     req.end();
 }
