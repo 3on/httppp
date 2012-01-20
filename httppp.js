@@ -48,6 +48,20 @@ function uniq () {
   return 'Session ' + sessions.length
 }
 
+function jsDOM (html, callback) {
+  jsdom.env({
+       html: html
+      ,scripts: ['./jquery-1.7.1.min.js']
+      },
+      function(error, window) {
+        if (error)
+          console.log('JsDOM Error:', error)
+
+        callback(window)
+      }
+    )
+}
+
 function runQuery (query, session) {
     var q = cutUrl(query.url);
     q.headers = query.headers || [];
@@ -63,8 +77,8 @@ function runQuery (query, session) {
       q.headers['Content-Length'] = query.body.length
     }
     
-    var req = (q.ssl) ? http.request(q) : https.request(q)
-
+    var req = (q.ssl === true) ? https.request(q) : http.request(q)
+    
     req.on('response', function(res) {
         query.response = res;
         query.resData = '';
@@ -78,11 +92,15 @@ function runQuery (query, session) {
           
           // FIXME: process header -> process cookies
           
+          // FIXME: filter pre parsor for lame html errors
           // FIXME: call callback or jsDom
           if (session && session.jsdom) {
             // FIXME: jsDOM init
             if (session.html5) {
               // with html5 parsor
+            }
+            else {
+              jsDOM(query.resData, query.cb)
             }
           }
           else {
@@ -110,10 +128,14 @@ exports.session = function(opt) {
   var n = {name: uniq(), stacked: true, jsdom: false, html5: false, queries: [], cookies: []}
   
   if (opt) {
-    n.name = opt.name || uniq()
-    n.stacked = opt.stacked || true
-    n.jsdom = opt.jsdom || false
-    n.html5 = opt.html5 || false
+    if (_.isString(opt))
+      n.name = opt
+    else {
+      n.name = opt.name || uniq()
+      n.stacked = opt.stacked || true
+      n.jsdom = opt.jsdom || false
+      n.html5 = opt.html5 || false
+    }
   } 
 
   sessions.push(n)
@@ -151,7 +173,11 @@ exports.query = function(opt, sessionName) {
 }
 
 exports.run = function(name) {
-    var sId = name ? getSessionIdByName(name) : getLastSessionId();
+    var sId = (name) ? getSessionIdByName(name) : getLastSessionId();
+    if (sId == -1) {
+      console.log('Session not found')
+      return
+    }
     _.each(sessions[sId].queries, function(q) {
         runQuery(q, sessions[sId]);
     });
