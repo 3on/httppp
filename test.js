@@ -5,26 +5,26 @@ httppp.get({url: 'http://www.imdb.com/name/nm1297015/', cb : function(body) {
   console.log("Emma Stone's profile loaded")
 }})
 
+// jsDOM test
 httppp.session({name: 'imdb2', jsdom: true})
-httppp.get({url: 'http://www.imdb.com/name/nm1297015/', cb : function(window) {
-  var nb = window.$('#filmo-head-Actress').next().find('.filmo-row').length
-  
-  console.log("Emma Stone's has playes in " + nb + " movies")
+httppp.get({url: 'http://akas.imdb.com/name/nm1297015/', cb : function(window) {
+  var roles = window.$('#filmo-head-Actress').next().find('.filmo-row')
+  console.log(_.isArray(roles))
+  console.log("Emma Stone's has playes in " + roles.length + " movies")
   
 }})
 
+// 302 test
 httppp.session('example')
 httppp.get({url: 'http://example.com', cb : function(body) {
   console.log(body)
 }})
 
-
-
-
-
+// post test
 httppp.session('post')
 httppp.post({url: 'http://posttestserver.com/post.php', data: {user:"test", password: "toto"}, cb : function(body) {
   console.log("Data posted", body)
 }})
+
 
 httppp.run('imdb2')

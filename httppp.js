@@ -94,12 +94,17 @@ function runQuery (query, session) {
         
         res.on('end', function() {
           // FIXME: End of buffering
-          console.log(res.statusCode, res.headers)
+          //console.log(res.statusCode, res.headers)
           
           // FIXME: 302 redirection res.location INFINITE REDIRECTION TO FIX
           // res.headers.location
           if (session && session.followRedirection && res.statusCode == 302) {
+            if (query.redir > 10) {
+              console.log("It looks like you are in an infinite loop of redirections !")
+              return false
+            }
             query.url = res.headers.location
+            query.redir++
             runQuery(query, session)
           }
           
@@ -108,6 +113,7 @@ function runQuery (query, session) {
           
           // FIXME: filter pre parsor for lame html errors
           // FIXME: call callback or jsDom
+          //console.error(query.resData)
           if (session && session.jsdom) {
             if (session.html5)
               jsDOMwithHTML5(query.resData, query.cb)
@@ -139,7 +145,7 @@ function stackQuery (argument, sId) {
 }
 
 exports.session = function(opt) {
-  var n = {name: uniq(), stacked: true, jsdom: false, html5: false, followRedirection: true,  queries: [], cookies: []}
+  var n = {name: uniq(), stacked: true, jsdom: false, html5: false, followRedirection: true, redir: 0,  queries: [], cookies: []}
   
   if (opt) {
     if ( _.isString(opt) )
