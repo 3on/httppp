@@ -62,6 +62,10 @@ function jsDOM (html, callback) {
     )
 }
 
+function jsDOMwithHTML5 (html, callback) {
+  console.log('Not yet implemented !')
+}
+
 function runQuery (query, session) {
     var q = cutUrl(query.url);
     q.headers = query.headers || [];
@@ -89,19 +93,25 @@ function runQuery (query, session) {
         
         res.on('end', function() {
           // FIXME: End of buffering
+          console.log(res.statusCode, res.headers.location)
+          
+          // FIXME: 302 redirection res.location INFINITE REDIRECTION TO FIX
+          // res.headers.location
+          if (session && session.followRedirection && res.statusCode == 302) {
+            query.url = res.headers.location
+            runQuery(query, session)
+          }
           
           // FIXME: process header -> process cookies
+          // res.headers
           
           // FIXME: filter pre parsor for lame html errors
           // FIXME: call callback or jsDom
           if (session && session.jsdom) {
-            // FIXME: jsDOM init
-            if (session.html5) {
-              // with html5 parsor
-            }
-            else {
+            if (session.html5)
+              jsDOMwithHTML5(query.resData, query.cb)
+            else
               jsDOM(query.resData, query.cb)
-            }
           }
           else {
             query.cb(query.resData)
@@ -113,9 +123,12 @@ function runQuery (query, session) {
         console.error('Could not complete query: ' + e.message);
     });
     
+    // write body (for POST and PUT? queries)
     if (query.body) {
         req.write(query.body);
     }
+    
+    // if we don't end, it will never gonna give you up
     req.end();
 }
 
@@ -125,16 +138,17 @@ function stackQuery (argument, sId) {
 }
 
 exports.session = function(opt) {
-  var n = {name: uniq(), stacked: true, jsdom: false, html5: false, queries: [], cookies: []}
+  var n = {name: uniq(), stacked: true, jsdom: false, html5: false, followRedirection: true,  queries: [], cookies: []}
   
   if (opt) {
-    if (_.isString(opt))
+    if ( _.isString(opt) )
       n.name = opt
     else {
       n.name = opt.name || uniq()
       n.stacked = opt.stacked || true
       n.jsdom = opt.jsdom || false
       n.html5 = opt.html5 || false
+      n.followRedirection = opt.followRedirection || true
     }
   } 
 

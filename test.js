@@ -13,6 +13,11 @@ httppp.get({url: 'http://www.imdb.com/name/nm1297015/', cb : function(window) {
   
 }})
 
+httppp.session('example')
+httppp.get({url: 'http://example.com', cb : function(body) {
+  console.log(body)
+}})
+
 
 
 
@@ -22,4 +27,4 @@ httppp.post({url: 'http://posttestserver.com/post.php', data: {user:"test", pass
   console.log("Data posted", body)
 }})
 
-httppp.run('imdb2')
+httppp.run('example')
