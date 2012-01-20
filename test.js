@@ -27,4 +27,4 @@ httppp.post({url: 'http://posttestserver.com/post.php', data: {user:"test", pass
   console.log("Data posted", body)
 }})
 
-httppp.run('example')
+httppp.run('imdb2')

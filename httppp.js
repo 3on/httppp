@@ -68,7 +68,7 @@ function jsDOMwithHTML5 (html, callback) {
 
 function runQuery (query, session) {
     var q = cutUrl(query.url);
-    q.headers = query.headers || [];
+    q.headers = query.headers || {}
     q.method = query.method;
 
     if (session) {
@@ -80,6 +80,7 @@ function runQuery (query, session) {
       q.headers['Content-Type'] = 'application/x-www-form-urlencoded'
       q.headers['Content-Length'] = query.body.length
     }
+    
     
     var req = (q.ssl === true) ? https.request(q) : http.request(q)
     
@@ -93,7 +94,7 @@ function runQuery (query, session) {
         
         res.on('end', function() {
           // FIXME: End of buffering
-          console.log(res.statusCode, res.headers.location)
+          console.log(res.statusCode, res.headers)
           
           // FIXME: 302 redirection res.location INFINITE REDIRECTION TO FIX
           // res.headers.location
