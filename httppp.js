@@ -144,23 +144,46 @@ function stackQuery (argument, sId) {
   sess.queries ? sess.queries.push(argument) : sess.queries = [argument];
 }
 
-exports.session = function(opt) {
+function createNewSession(opt) {
   var n = {name: uniq(), stacked: true, jsdom: false, html5: false, followRedirection: true, redir: 0,  queries: [], cookies: []}
   
-  if (opt) {
-    if ( _.isString(opt) )
-      n.name = opt
-    else {
-      n.name = opt.name || uniq()
-      n.stacked = opt.stacked || true
-      n.jsdom = opt.jsdom || false
-      n.html5 = opt.html5 || false
-      n.followRedirection = opt.followRedirection || true
-    }
-  } 
-
+  opt = _.isString(opt) ? {name: opt} : opt
+  
+  n.name = opt.name || uniq()
+  n.stacked = opt.stacked || true
+  n.jsdom = opt.jsdom || false
+  n.html5 = opt.html5 || false
+  n.followRedirection = opt.followRedirection || true
+  
   sessions.push(n)
 }
+
+function updateSession (opt) {
+  
+  var name = (_.isString(opt)) ? opt : opt.name
+  var n = _.find(sessions, function(e) { return e.name == name })
+  
+  n.stacked = opt.stacked || true
+  n.jsdom = opt.jsdom || false
+  n.html5 = opt.html5 || false
+  n.followRedirection = opt.followRedirection || true
+}
+
+exports.session = function(opt) {
+  
+  if (opt) {
+    var name = (_.isString(opt)) ? opt : opt.name
+    var existing = _.find(sessions, function(e) { return e.name == name })
+
+    if (existing)
+      updateSession(opt)
+    else
+      createNewSession(opt)
+  }
+  else
+    createNewSession()
+}
+
 exports.get = function(opt) {
   if (!opt)
     return console.error('GET needs some options get({url:\'example.com\'})')
@@ -202,4 +225,11 @@ exports.run = function(name) {
     _.each(sessions[sId].queries, function(q) {
         runQuery(q, sessions[sId]);
     });
+    
+    // FIXME: controversial... SHOULD WE ?
+    sessions[sId].queries = []
 }
+
+exports.debug = function() {
+  return sessions
+};
